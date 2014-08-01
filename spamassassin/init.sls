@@ -3,10 +3,14 @@
 {% from 'spamassassin/defaults.yaml' import rawmap with context %}
 {% set datamap = salt['grains.filter_by'](rawmap, merge=salt['pillar.get']('spamassassin:lookup')) %}
 
+include: {{ datamap.sls_include|default([]) }}
+extend: {{ datamap.sls_extend|default({}) }}
+
 spamassassin:
   pkg:
     - installed
     - pkgs: {{ datamap.pkgs }}
+    - require: {{ datamap.init_require|default([]) }}
   service:
     - {{ datamap.service.ensure|default('running') }}
     - name: {{ datamap.service.name|default('spamassassin') }}
@@ -31,8 +35,8 @@ pyzor_dir:
   file:
     - directory
     - name: {{ datamap.config.pyzor_dir.path }}
-    - user: {{ datamap.user.name }}
-    - group: {{ datamap.group.name }}
+    - user: {{ datamap.pyzor.user.name|default(datamap.user.name) }}
+    - group: {{ datamap.pyzor.group.name|default(datamap.group.name) }}
     - mode: 755
 
 {% set pyzor_cmds = [
@@ -44,7 +48,7 @@ sa_pyzor_init:
   cmd:
     - run
     - name: {{ pyzor_cmds|join(' ') }}
-    - user: {{ datamap.user.name }}
+    - user: {{ datamap.pyzor.user.name|default(datamap.user.name) }}
     - unless: test -e {{ datamap.config.pyzor_dir.path }}/servers
     - require:
       - file: pyzor_dir
@@ -55,8 +59,8 @@ razor_dir:
   file:
     - directory
     - name: {{ datamap.config.razor_dir.path }}
-    - user: {{ datamap.user.name }}
-    - group: {{ datamap.group.name }}
+    - user: {{ datamap.razor.user.name|default(datamap.user.name) }}
+    - group: {{ datamap.razor.group.name|default(datamap.group.name) }}
     - mode: 755
 
 {% set razor_cmds = [
@@ -70,7 +74,7 @@ sa_razor_init:
   cmd:
     - run
     - name: {{ razor_cmds|join(' ') }}
-    - user: {{ datamap.user.name }}
+    - user: {{ datamap.razor.user.name|default(datamap.user.name) }}
     - unless: test -e {{ datamap.config.razor_dir.path }}/identity
     - require:
       - file: razor_dir
@@ -91,3 +95,12 @@ sa_config_razor_agent:
       - cmd: sa_razor_init
     - watch_in:
       - service: spamassassin
+
+{% for f in datamap.configs_absent|default([]) %}
+configfile_absent_{{ f }}:
+  file:
+    - absent
+    - name: {{ f }}
+    - watch_in:
+      - service: spamassassin
+{% endfor %}

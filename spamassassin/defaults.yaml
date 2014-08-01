@@ -8,38 +8,37 @@ Debian:
     manage:
       - default
       - init_pre
-      - local_cf
-      - v310_pre
-      - v312_pre
-      - v320_pre
-      - v330_pre
-      - v340_pre
     default:
       path: /etc/default/spamassassin
       template_path: salt://spamassassin/files/config/default.{{ salt['grains.get']('oscodename') }}
     init_pre:
       path: /etc/spamassassin/init.pre
-    local_cf:
-      path: /etc/spamassassin/local.cf
-    v310_pre:
-      path: /etc/spamassassin/v310.pre
-    v312_pre:
-      path: /etc/spamassassin/v312.pre
-    v320_pre:
-      path: /etc/spamassassin/v320.pre
-    v330_pre:
-      path: /etc/spamassassin/v330.pre
-    v340_pre:
-      path: /etc/spamassassin/v340.pre
     pyzor_dir:
       path: /etc/spamassassin/.pyzor
     razor_dir:
       path: /etc/spamassassin/.razor
     razor_agent:
       path: /etc/spamassassin/.razor/razor-agent.conf
+  configs_absent:
+    - /etc/spamassassin/local.cf
+    - /etc/spamassassin/v310.pre
+    - /etc/spamassassin/v312.pre
+    - /etc/spamassassin/v320.pre
+    - /etc/spamassassin/v330.pre
+    - /etc/spamassassin/v340.pre
   service: {}
   user:
     name: debian-spamd
   group:
     name: debian-spamd
+  razor:
+    user:
+      name: debian-spamd
+    group:
+      name: debian-spamd
+  pyzor:
+    user:
+      name: debian-spamd
+    group:
+      name: debian-spamd
 {% endload %}
