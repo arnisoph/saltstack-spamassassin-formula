@@ -1,3 +1,4 @@
+# Example Pillars when using this formula along with https://github.com/bechtoldt/amavis-formula
 spamassassin:
   lookup:
     sls_include:
